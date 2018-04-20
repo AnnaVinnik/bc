@@ -3,41 +3,43 @@
 //#include <curses.h>
 #include <sys/ioctl.h>
 #include "myTerm.h"
-#define c 112
+#define c 35 
 #define r 35
-
+#define t1 16843134
+#define t2 260079876
+// s -; l  , k
 int printA()
 {
-	mt_gotoXY(1, 7);
-	printf("%c", c);
-	mt_gotoXY(2, 5);
-	printf("%c   %c", c, c);
-	mt_gotoXY(3, 3);
-	printf("%c  %c%c%c  %c", c, c, c, c, c);
-	mt_gotoXY(4, 1);
-	printf("%c           %c", c, c);
+	//printf("\E(0%s\E(B", "r");
+	//printf("\E[4%dm", 2);
+	mt_setbgcolor(3);
+	printf("%c", r);
+	//printf("\E[4%dm", 0);
 	
-
 }
 
 int bc_box(int x1, int y1, int x2, int y2)
 {
 int i;
-	//mt_clrscr();
+	mt_clrscr();
 	mt_gotoXY(y1, x1);
-	for (i = x1; i < x2; i++){
-		printf("%c", r);
+	printf("\E(0%s\E(B", "l");
+	for (i = x1 + 1; i < x2 - 1; i++){
+		printf("\E(0%s\E(B", "q");
 	}
-	for (i = y1; i < y2; i++){
-		mt_gotoXY(i, x1);
-		printf("%c", r);
+	printf("\E(0%s\E(B", "k");
+	for (i = y1 + 2; i < y2; i++){
+		mt_gotoXY(i, x1 );
+		printf("\E(0%s\E(B", "x");
 		mt_gotoXY(i, x2);
-		printf("%c", r);
+		printf("\E(0%s\E(B", "x");
 	}
-	mt_gotoXY(y2, x1);
-	for (i = x1; i <= x2; i++){
-		printf("%c", r);
+	mt_gotoXY(y2, x1 + 1);
+	printf("\E(0%s\E(B", "m");
+	for (i = x1; i < x2 - 2; i++){
+		printf("\E(0%s\E(B", "q");
 	}
+	printf("\E(0%s\E(B", "j");
 	printf("\n");
 	
 }
@@ -51,26 +53,30 @@ int bc_printbigchar(int symbol[2], int x, int y, int color1, int color2)
 {
 int i = 0, j;
 
-	mt_setbgcolor(4);
-	mt_setfgcolor(3);
+	mt_setbgcolor(7);
+	mt_setfgcolor(4);
+	
+	
+	
+	
 	for (i = 0; i < 4; i++){
 		for (j = 8; j >= 1; j--){
 			if ((symbol[0] >> (i*7 + j - 1)&0x1) == 1){
-				printf("%c", r);
+				printf("\E(0%s\E(B", "a");
 			}
 			else
-				printf(".");
+				printf(" ");
 			
 		}
 		printf("\n");
 	}
 	for (i = 0; i < 4; i++){
 		for (j = 8; j >= 1; j--){
-			if ((symbol[1] >> (i*7 + j - 1)&123) == 1){
-				printf("%c", r);
+			if ((symbol[1] >> (i*7 + j - 1)&0x1) == 1){
+				printf("\E(0%s\E(B", "a");
 			}
 			else
-				printf(".");
+				printf(" ");
 			
 		}
 		printf("\n");
@@ -103,7 +109,7 @@ int bc_getbigcharpos(int * big, int x, int y, int *value)
 	if (y < 4){
 		*value = ((big[0] >> (y * 7) + (7 - x)) & 0x1);
 	}else{
-		*value = (big[1] >> ((y - 4) * 7 + x - 1) & 0x1);
+		*value = (big[0] >> ((y - 4) * 7 + x - 1) & 0x1);
 	}
 	return 0;
 }
@@ -130,7 +136,7 @@ int i, j, k;
 		fputc('\n', file);
 	}
 	fputc('\n',file);
-	fputc('\n', file); 
+	//fputc('\n', file); 
 	}
 		
 	
@@ -144,7 +150,7 @@ FILE *file = fopen("text.txt", "r");
 char str[10], str2[10];
 int i, j,  k, l;
 
-	for (k = 0; k < 1; k++){
+	for (k = 0; k < need_count; k++){
 		for (i = 0; i < 8; i++){
 			for (l = 0; l < 8; l++)
 				str[l] = 0;
@@ -161,25 +167,10 @@ int i, j,  k, l;
 			}
 			printf("\n");
 		}
+		//fscanf(file, "%s", str);
+		//printf("\n");
 	}
-	/*for (k = 1; k < 2; k++){
-	printf("k = 1\n");
-		for (i = 0; i < 4; i++){
-			printf("i = %d\n", i);
-			for (j = 0; j < 8; j++){
-			printf("j = %d ", j);
-				s = fgetc(file);
-				if (s == '.'){
-					bc_setbigcharos(&big[k], i, j, 0);
-					printf(".");
-				}else if (s == r){
-					bc_setbigcharos(&big[k], i, j, 1);
-					printf("+");
-				}
-			}
-			printf("\n");
-		}
-	}*/
+
 fclose(file);
 }
 
@@ -187,33 +178,51 @@ int main()
 {
 	mt_clrscr();
 	char a[1] = {'a'};
-	int k[4] = {20, 4, 2, 5};
-	int b[4] = {17, 2, 1, 3}, n[4] = {0};
+	int k[4] = {20, 4, 3, 5};
+	int b[4] = {4, 2, 1, 10}, n[4] = {0};
 	int enter[2];
 	
-	//bc_printA(a);
+	
 	//scanf("%d", &enter[0]);
 	//mt_clrscr();
-	
-	//bc_box(10, 7, 25, 14);
-	//scanf("%d", &a);
+	//scanf("%d", &enter[0]);
 	//mt_clrscr();
+	//bc_printA(a);
+	//bc_box(0, 0, 8, 9);
+	
+	
+	bc_bigcharread(1, k , 1, b);
+	printf("bigcharread in k[] = %d \n", k[1]);
 	
 	bc_printbigchar(k, 10, 10, 1, 1);
-	bc_bigcharwrite(2, b, 4);
-	bc_bigcharread(1, k , 2, b);
-	//bc_setbigcharos(k, 1, 2, 1);
+	printf("\n");
+	/*scanf("%d", &enter[1]);
+	mt_clrscr();
 	printf("\n");
 	bc_printbigchar(k, 10, 10, 1, 1);
 	
-	//bc_getbigcharpos(k, 1, 2, &k[0]);
-	printf("k[0] = %d\n", k[1]);
+	bc_bigcharwrite(2, b, 2);
+	printf("k[0] = %d\n", k[0]);
+	printf("bigcharwrite b[]\n");
+	bc_bigcharread(1, k , 1, b);
+	printf("bigcharread in k[]: \n");
+	printf("k[0] = %d\n", k[0]);
+	printf("setbigchar x = 1, y = 2, value = 1\n");
+	bc_setbigcharos(k, 1, 2, 1);
+	printf("\n");
+	bc_printbigchar(k, 10, 10, 1, 1);
+	//bc_printbigchar(k, 10, 10, 1, 1);
+	printf("getbigchar x = 1, y = 2: ");
+	bc_getbigcharpos(k, 1, 2, &k[0]);
+	printf(" %d\n", k[0]);
+	
+	
 	
 	//bc_bigcharwrite(2, k, 4);
 	//bc_bigcharread(1, b, 3, &k[0]); 
 	//bc_printbigchar(b, 10, 10, 1, 1);
-	printf("b = %d \n", b[0]);
-	
+	//printf("b = %d \n", b[0]);
+	*/
 
 	return 0;
 }
